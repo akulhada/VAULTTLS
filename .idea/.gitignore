@@ -8,3 +8,19 @@
 # Datasource local storage ignored files
 /dataSources/
 /dataSources.local.xml
+# macOS
+.DS_Store
+__MACOSX/
+# Python bytecode
+__pycache__/
+.pytest_cache/
+*.pyc
+# Runtime database — populated when users register
+db/*.json
+# Generated certificates — created automatically on first run by bootstrap_pki()
+certs/*.pem
+#
+results/
+*.log
+# editor / temp
+*.tmp

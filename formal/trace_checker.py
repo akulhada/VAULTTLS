@@ -287,7 +287,7 @@ def run_all_checks() -> int:
 
 if __name__ == "__main__":
     print("=" * 65)
-    print("  VAULTTLS-R: Symbolic Trace Checker")
+    print("  VAULTTLS: Symbolic Trace Checker")
     print("  Mechanized lemma verification on concrete protocol runs")
     print("=" * 65)
     print()

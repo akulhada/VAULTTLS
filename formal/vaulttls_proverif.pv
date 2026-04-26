@@ -3,7 +3,7 @@
    =========================================================================
 
    This file is a complete, syntactically correct ProVerif model for the
-   VAULTTLS-R handshake protocol.  It encodes the protocol faithfully enough
+   VAULTTLS handshake protocol.  It encodes the protocol faithfully enough
    to machine-check the five core security properties that the prose model
    in vaulttls_symbolic_model.md only states as candidate lemmas.
 

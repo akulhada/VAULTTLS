@@ -3,7 +3,7 @@
  * ==========================================
  *
  * This file is a complete, syntactically valid Tamarin (>= 1.8) model for
- * the VAULTTLS-R protocol.  It encodes the full handshake and registration
+ * the VAULTTLS- protocol.  It encodes the full handshake and registration
  * flows and states five security lemmas that Tamarin can machine-check.
  *
  * How to run:
