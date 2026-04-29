@@ -201,3 +201,5 @@ This document does **not** claim:
 - strong side-channel protection on hostile hosts
 
 Its purpose is narrower: make the intended security properties explicit, show what in the code supports them, and identify the remaining gaps honestly.
+
+For the exact RFC coverage, deliberate omissions, and their security impact, see [`docs/standards_alignment.md`](docs/standards_alignment.md).
