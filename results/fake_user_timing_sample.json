@@ -1,0 +1,60 @@
+{
+  "study": "fake-user-vs-wrong-password",
+  "trials": 12,
+  "server_hello_length_bytes": {
+    "wrong_password": {
+      "count": 12,
+      "mean": 1431.9166666666667,
+      "stdev": 0.7592027982620249,
+      "median": 1432.0,
+      "p95": 1433.0,
+      "min": 1431.0,
+      "max": 1433.0
+    },
+    "unknown_user": {
+      "count": 12,
+      "mean": 1432.1666666666667,
+      "stdev": 0.5527707983925666,
+      "median": 1432.0,
+      "p95": 1433.0,
+      "min": 1431.0,
+      "max": 1433.0
+    },
+    "all_equal": false,
+    "unique_lengths_wrong": [
+      1431,
+      1432,
+      1433
+    ],
+    "unique_lengths_unknown": [
+      1431,
+      1432,
+      1433
+    ]
+  },
+  "failure_time_ms": {
+    "wrong_password": {
+      "count": 12,
+      "mean": 251.97594091635742,
+      "stdev": 4.285448236625255,
+      "median": 251.77535449620336,
+      "p95": 259.9888329859823,
+      "min": 245.7230830041226,
+      "max": 259.9888329859823
+    },
+    "unknown_user": {
+      "count": 12,
+      "mean": 252.85394450474996,
+      "stdev": 3.756867122919952,
+      "median": 252.28189599874895,
+      "p95": 258.4355410072021,
+      "min": 247.19749999349006,
+      "max": 258.4355410072021
+    },
+    "mean_gap_ms": 0.878003588392545
+  },
+  "interpretation": {
+    "message_shape_goal": "Equal ServerHello sizes are a necessary but not sufficient condition for reduced enumeration leakage.",
+    "timing_goal": "Small average timing gaps are encouraging but not a proof of indistinguishability."
+  }
+}

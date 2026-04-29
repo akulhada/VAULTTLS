@@ -1,0 +1,24 @@
+=================================================================
+  VAULTTLS: Symbolic Trace Checker
+  Mechanized lemma verification on concrete protocol runs
+=================================================================
+
+  [HOLDS  ] L9  password_not_on_wire
+  [HOLDS  ] L1  session_key_secrecy
+  [HOLDS  ] L9  password_not_on_wire (login)
+  [HOLDS  ] L2  client_to_server_agreement
+  [HOLDS  ] L3  server_to_client_agreement
+  [HOLDS  ] L4  registration_authenticity
+  [HOLDS  ] L5  forward_secrecy
+  [HOLDS  ] L6  replay_resistance
+  [HOLDS  ] L7  fake_user_path_exists
+  [HOLDS  ] L8  wrong_password_rejected
+  [HOLDS  ] L10 transcript_binding
+
+Results: 11/11 lemmas hold, 0 violations
+
+All security lemmas HOLD on the concrete protocol trace.
+NOTE: This is NOT a full formal proof. It demonstrates that the
+      implementation satisfies the stated lemmas on concrete runs.
+      Machine-checked proofs require Tamarin/ProVerif + crypto lib.
+

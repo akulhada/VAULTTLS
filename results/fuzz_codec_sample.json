@@ -1,0 +1,34 @@
+{
+  "campaign": "codec fuzzing",
+  "iterations_per_decoder": 1000,
+  "seed": 539,
+  "results": {
+    "decode_client_hello": {
+      "ValueError": 233,
+      "accepted": 275,
+      "AssertionError": 492
+    },
+    "decode_server_hello": {
+      "ValueError": 240,
+      "AssertionError": 527,
+      "accepted": 233
+    },
+    "decode_client_finish": {
+      "AssertionError": 537,
+      "accepted": 232,
+      "ValueError": 231
+    },
+    "decode_app_data": {
+      "AssertionError": 496,
+      "accepted": 258,
+      "ValueError": 246
+    },
+    "decode_alert": {
+      "AssertionError": 531,
+      "ValueError": 240,
+      "accepted": 229
+    }
+  },
+  "unexpected_exception_samples": [],
+  "note": "Accepted malformed inputs are not automatically bugs; some random inputs may accidentally satisfy a message grammar."
+}
