@@ -245,14 +245,40 @@ Reference:
 ---
 
 ## Result Snapshot
-Current artifact snapshots report:
-- **Resgistration Latency:** ~449.68 ms mean
-- **Login Lateency:** ~436.81 ms mean
-- **Application Round Trip:** ~2.23 ms mean
-- **Throughput:** ~1.02 MiB/s mean
-- **Overhead vs Password -Over TLS Baseline:** ~116.03 ms (~49.6%)
-- **Fake user vs Wrong Password Mean Timing Gap:** ~2.03 ms
-- **Codec Fizzing:** No unexpected exception in the sample campaign
+### Verification
+The concrete trace checker reports **11/11 lemmas hold** with **0 violations**. The verification log also states explicitly that this is not a full formal proof; it shows that the implementation satisfies the stated lemmas on concrete runs.
+
+### Performance
+Main benchmark configuration: **8 iterations, 16 app rounds, 1024-byte messages**. In this run, VAULTTLS reports:
+- **Registration latency**: 253.68 ms mean
+- **Login latency**: 251.58 ms mean
+- **Application round trip**: 0.168 ms mean
+- **Throughput**: 6.10 MiB/s mean
+
+### Fake-user Timing Study
+The fake-user vs wrong-password study uses **12 trials per class**. The results are:
+- **Wrong-password Mean Failure Time**: 251.98 ms
+- **Unknown-user Mean failure time**: 252.85 ms
+- **Mean timing gap**: 0.878 ms
+- 
+The `ServerHello` length distributions overlap on both paths, with observed lengths of **1431, 1432, and 1433 bytes** for both wrong-password and unknown-user cases. This is encouraging for reduced user-enumeration leakage, though it is not a proof of indistinguishability.
+
+### Codec Fuzzing
+The codec fuzzing campaign uses **1000 iterations per decoder** with **seed 539**. No unexpected exceptions were observed.
+
+Per-decoder outcomes in the current sample are:
+- `decode_client_hello`: 275 accepted, 492 `AssertionError`, 233 `ValueError`
+- `decode_server_hello`: 233 accepted, 527 `AssertionError`, 240 `ValueError`
+- `decode_client_finish`: 232 accepted, 537 `AssertionError`, 231 `ValueError`
+- `decode_app_data`: 258 accepted, 496 `AssertionError`, 246 `ValueError`
+- `decode_alert`: 229 accepted, 531 `AssertionError`, 240 `ValueError`
+
+### Additional Benchmark File
+The current file named `baseline_comparison.json` is actually another **VAULTTLS benchmark snapshot**, not a protocol-comparison table. For **6 iterations, 32 app rounds, and 1024-byte messages**, it reports:
+- **Registration latency**: 269.21 ms mean
+- **Login latency**: 259.27 ms mean
+- **Application round trip**: 0.135 ms mean
+- **Throughput**: 7.33 MiB/s mean
 
 These results are intended as artifact-level evidence, not a production benchmark suite.
 
