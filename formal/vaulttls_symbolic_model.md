@@ -153,13 +153,3 @@ If `PwRec(U,S,Rec)` exists for an honest server, then previously
 
 No two successful record-accept events on the same channel use the same record
 sequence number.
-
-## What remains for a real proof
-
-A machine-checked proof would need:
-
-- a precise abstraction of the OPAQUE accept condition,
-- compromise rules and freshness conditions,
-- injective correspondence lemmas rather than only non-injective agreement,
-- explicit ordering constraints for replay resistance,
-- careful treatment of registration-vs-login state.
