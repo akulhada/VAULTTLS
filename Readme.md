@@ -69,15 +69,147 @@ Key security-oriented features include:
 
 ## Quick start
 
-### 1. Install dependencies
+### 1. Create and Activate a Virtual Environment
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+### 2. Install dependencies
 
 ```bash
 pip install -r requirements.txt
 pip install -r requirements-dev.txt
 ```
 
-### 2. 
+### 3. Generate the Certificates
 
+A. Generate Directly
+```bash
+python3 pki.py
+```
+
+B. Generate Automatically
+
+```bash
+python3 server.py
+```
+
+On startup, the server calls the PKI bootstrap path and creates the same files if they are missing.
+
+### 3. Generate the DB Files
+
+A. Create Empty DB Files
+
+If you want both `db/users.json` and `db/server_state.json` to exist right away, run:
+```bash
+python3 -c "from storage import users_db, server_state_db; users_db(),server_state_db(); print('db initialized')"
+```
+
+B. Generate the DB using Protocol
+
+Keep the serve running in one terminal:
+```bash
+python3 server.py
+```
+
+Then in another terminal:
+```bash
+python3 register_user.py --user alice --password s3cr3t
+```
+
+This creates:
+```
+db/users.json
+db/server_state.json
+```
+
+### 4. Run the Regression Suite
+
+Before generating artifact outputs, it is a good idea to confirm the repo is healthy"
+```bash
+pytest -q
+```
+
+### 5. Generate the `results/` Files
+#### Important Rule
+For the benchmark, fake-user timing, and baseline scripts, do not keep python server.py running manually unless the script documentation explicitly says to. These tools start their own background server subprocess.
+
+#### 1. Benchmark results
+
+Generate the benchmark JSON:
+```bash
+python3 tools/benchmark_artifact.py \
+  --iterations 8 \
+  --app-rounds 16 \
+  --message-size 1024 \
+  --output results/benchmark_sample.json \
+  --server-log results/benchmark_server.log
+```
+
+This matches the benchmark sample configuration already saved in the artifact: 8 iterations, 16 app rounds, 1024-byte messages. The current sample reports about 449.68 ms registration latency, 436.81 ms login latency, 2.23 ms app round-trip, and 1.02 MiB/s throughput.
+
+Creates:
+```
+results/benchmark_sample.json
+results/benchmark_server.log
+```
+
+#### 2. Fake-user timing results
+
+Generate the timing-study JSON:
+```bash
+python tools/measure_fake_user_timing.py \
+  --trials 12 \
+  --output results/fake_user_timing_sample.json \
+  --server-log results/fake_user_timing_server.log
+```
+
+The current saved sample uses 12 trials per class and reports a 2.03 ms mean timing gap.
+
+Creates:
+```
+results/fake_user_timing_sample.json
+results/fake_user_timing_server.log
+```
+
+#### 3. Codec fuzzing results
+
+Generate the fuzz report:
+```bash
+python tools/fuzz_codec.py \
+  --iterations 1000 \
+  --seed 539 \
+  --output results/fuzz_codec_sample.json
+```
+
+The sample fuzzing campaign uses 1000 iterations per decoder with seed 539 and reports no unexpected exceptions.
+
+Creates:
+```
+results/fuzz_codec_sample.json
+```
+
+#### 4. Baseline comparison results
+
+Generate the baseline comparison with:
+```bash
+python tools/compare_baselines.py \
+  --iters 6 \
+  --out results/baseline_comparison.json
+```
+
+The saved baseline comparison reports:
+- password-over-TLS mean: 234.12 ms
+- certificate-only mutual-auth mean: 0.74 ms
+- VAULTTLS-R mean: 350.15 ms
+- overhead vs password-over-TLS: 116.03 ms (49.6%)
+
+Creates:
+```
+results/baseline_comparison.json
+```
 
 ---
 
@@ -121,6 +253,8 @@ Current artifact snapshots report:
 - **Fake user vs Wrong Password Mean Timing Gap:** ~2.03 ms
 - **Codec Fizzing:** No unexpected exception in the sample campaign
 
+These results are intended as artifact-level evidence, not a production benchmark suite.
+
 ---
 
 ## Limitations
@@ -148,4 +282,3 @@ VAULTTLS implements the **security-relevant core** of an OPAQUE-style augmented 
 It is intentionally **not** a wire-compatible implementation of RFC 9807 or RFC 8446. The repository omits negotiation, resumption, full PKIX validation, and broader interoperability machinery because they are outside the project’s closed localhost threat model.
 
 For the full matrix of what is implemented, adapted, omitted, and the security impact of each omission, see [`docs/standards_alignment.md`](docs/standards_alignment.md).
-
