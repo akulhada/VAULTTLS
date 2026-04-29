@@ -196,8 +196,9 @@ results/fuzz_codec_sample.json
 Generate the baseline comparison with:
 ```bash
 python tools/compare_baselines.py \
-  --iters 6 \
-  --out results/baseline_comparison.json
+  --iterations 6 \
+  --output results/baseline_comparison.json \
+  --server-log results/baseline_server.log
 ```
 
 The saved baseline comparison reports:
