@@ -1,0 +1,213 @@
+Process 0 (that is, the initial process):
+{1}new ca_sk: bitstring;
+{2}new srv_sk: bitstring;
+{3}new oprf_key: bitstring;
+{4}let ca_pk: bitstring = pk(ca_sk) in
+{5}let srv_pk: bitstring = pk(srv_sk) in
+{6}out(c, ca_pk);
+{7}out(c, srv_pk);
+(
+    {8}let ca_sk_1: bitstring = ca_sk in
+    {9}let srv_sk_1: bitstring = srv_sk in
+    {10}let oprf_key_1: bitstring = oprf_key in
+    {11}let auth_secret: bitstring = auth_secret_global in
+    {12}let ca_pk_1: bitstring = pk(ca_sk_1) in
+    {13}let srv_pk_1: bitstring = pk(srv_sk_1) in
+    {14}let cert: bitstring = sign((server_name,srv_pk_1),ca_sk_1) in
+    {15}in(c, (reg_user: bitstring,reg_blind: bitstring,sid_reg: bitstring));
+    {16}let reg_eval: bitstring = oprf_eval(oprf_key_1,reg_blind) in
+    {17}let cfg: bitstring = (server_name,context) in
+    {18}let cfg_sig: bitstring = sign(cfg,srv_sk_1) in
+    {19}let cv_sig: bitstring = sign((context,reg_user,sid_reg),srv_sk_1) in
+    {20}event RegistrationServerSigned(server_name,sid_reg);
+    {21}out(c, (reg_eval,cert,ca_pk_1,cfg,cfg_sig,cv_sig));
+    {22}in(c, reg_record: bitstring);
+    {23}in(c, (user: bitstring,sid_s: bitstring,cred_id: bitstring,ke1: bitstring));
+    {24}let z: bitstring = oprf_eval(oprf_key_1,ke1) in
+    {25}new nonce_s: bitstring;
+    {26}let transcript_ke2: bitstring = (sid_s,cred_id,ke1,z,reg_record,nonce_s) in
+    {27}let opaque_sk: bitstring = opaque_secret(auth_secret,ke1,z,transcript_ke2) in
+    {28}let mac_key: bitstring = kdf(opaque_sk,(context,mac_label)) in
+    {29}let smac: bitstring = server_mac(mac_key,transcript_ke2) in
+    {30}event ServerResponded(transcript_ke2,server_name,server_name);
+    {31}out(c, (sid_s,z,reg_record,nonce_s,smac,cert,cfg,cfg_sig));
+    {32}in(c, cmac: bitstring);
+    {33}if (cmac = client_mac(mac_key,transcript_ke2,smac)) then
+    {34}let session_key: bitstring = kdf(opaque_sk,(transcript_ke2,cmac)) in
+    {35}event ServerFinished(transcript_ke2,server_name,server_name,session_key)
+) | (
+    {36}let password: bitstring = password_secret in
+    {37}let auth_secret_1: bitstring = auth_secret_global in
+    {38}new sid_reg_1: bitstring;
+    {39}new blind: bitstring;
+    {40}let reg_user_1: bitstring = alice in
+    {41}out(c, (reg_user_1,blind,sid_reg_1));
+    {42}in(c, (reg_eval_1: bitstring,cert_1: bitstring,ca_pk_recv: bitstring,cfg_1: bitstring,cfg_sig_1: bitstring,cv_sig_1: bitstring));
+    {43}if (ca_pk_recv = ca_pk) then
+    {44}if (verify(cert_1,(server_name,srv_pk),ca_pk) = true) then
+    {45}if (verify(cfg_sig_1,cfg_1,srv_pk) = true) then
+    {46}if (verify(cv_sig_1,(context,reg_user_1,sid_reg_1),srv_pk) = true) then
+    {47}let rw: bitstring = ksf(oprf_eval(auth_secret_1,password),H((reg_user_1,context))) in
+    {48}let record: bitstring = env_seal(rw,client_static_secret,srv_pk) in
+    {49}event RegistrationComplete(sid_reg_1,server_name,sid_reg_1);
+    {50}out(c, record);
+    {51}new sid_c: bitstring;
+    {52}new ke1_1: bitstring;
+    {53}let cred_id_1: bitstring = credential_id(reg_user_1,context) in
+    {54}event ClientStarted(sid_c,server_name,server_name);
+    {55}out(c, (reg_user_1,sid_c,cred_id_1,ke1_1));
+    {56}in(c, (sid2: bitstring,z_1: bitstring,record2: bitstring,nonce_s_1: bitstring,smac_1: bitstring,cert2: bitstring,cfg2: bitstring,cfg_sig2: bitstring));
+    {57}if (sid2 = sid_c) then
+    {58}let transcript_ke2_1: bitstring = (sid_c,cred_id_1,ke1_1,z_1,record2,nonce_s_1) in
+    {59}let opaque_sk_1: bitstring = opaque_secret(auth_secret_1,ke1_1,z_1,transcript_ke2_1) in
+    {60}let mac_key_1: bitstring = kdf(opaque_sk_1,(context,mac_label)) in
+    {61}if (smac_1 = server_mac(mac_key_1,transcript_ke2_1)) then
+    {62}let cmac_1: bitstring = client_mac(mac_key_1,transcript_ke2_1,smac_1) in
+    {63}let session_key_1: bitstring = kdf(opaque_sk_1,(transcript_ke2_1,cmac_1)) in
+    {64}event ClientFinished(transcript_ke2_1,server_name,server_name,session_key_1);
+    {65}out(c, cmac_1)
+)
+
+--  Process 1 (that is, process 0, with let moved downwards):
+{1}new ca_sk: bitstring;
+{2}new srv_sk: bitstring;
+{3}new oprf_key: bitstring;
+{4}let ca_pk: bitstring = pk(ca_sk) in
+{6}out(c, ca_pk);
+{5}let srv_pk: bitstring = pk(srv_sk) in
+{7}out(c, srv_pk);
+(
+    {15}in(c, (reg_user: bitstring,reg_blind: bitstring,sid_reg: bitstring));
+    {20}event RegistrationServerSigned(server_name,sid_reg);
+    {9}let srv_sk_1: bitstring = srv_sk in
+    {19}let cv_sig: bitstring = sign((context,reg_user,sid_reg),srv_sk_1) in
+    {17}let cfg: bitstring = (server_name,context) in
+    {18}let cfg_sig: bitstring = sign(cfg,srv_sk_1) in
+    {10}let oprf_key_1: bitstring = oprf_key in
+    {16}let reg_eval: bitstring = oprf_eval(oprf_key_1,reg_blind) in
+    {13}let srv_pk_1: bitstring = pk(srv_sk_1) in
+    {8}let ca_sk_1: bitstring = ca_sk in
+    {14}let cert: bitstring = sign((server_name,srv_pk_1),ca_sk_1) in
+    {12}let ca_pk_1: bitstring = pk(ca_sk_1) in
+    {21}out(c, (reg_eval,cert,ca_pk_1,cfg,cfg_sig,cv_sig));
+    {22}in(c, reg_record: bitstring);
+    {23}in(c, (user: bitstring,sid_s: bitstring,cred_id: bitstring,ke1: bitstring));
+    {25}new nonce_s: bitstring;
+    {24}let z: bitstring = oprf_eval(oprf_key_1,ke1) in
+    {26}let transcript_ke2: bitstring = (sid_s,cred_id,ke1,z,reg_record,nonce_s) in
+    {30}event ServerResponded(transcript_ke2,server_name,server_name);
+    {11}let auth_secret: bitstring = auth_secret_global in
+    {27}let opaque_sk: bitstring = opaque_secret(auth_secret,ke1,z,transcript_ke2) in
+    {28}let mac_key: bitstring = kdf(opaque_sk,(context,mac_label)) in
+    {29}let smac: bitstring = server_mac(mac_key,transcript_ke2) in
+    {31}out(c, (sid_s,z,reg_record,nonce_s,smac,cert,cfg,cfg_sig));
+    {32}in(c, cmac: bitstring);
+    {33}if (cmac = client_mac(mac_key,transcript_ke2,smac)) then
+    {34}let session_key: bitstring = kdf(opaque_sk,(transcript_ke2,cmac)) in
+    {35}event ServerFinished(transcript_ke2,server_name,server_name,session_key)
+) | (
+    {38}new sid_reg_1: bitstring;
+    {39}new blind: bitstring;
+    {40}let reg_user_1: bitstring = alice in
+    {41}out(c, (reg_user_1,blind,sid_reg_1));
+    {42}in(c, (reg_eval_1: bitstring,cert_1: bitstring,ca_pk_recv: bitstring,cfg_1: bitstring,cfg_sig_1: bitstring,cv_sig_1: bitstring));
+    {43}if (ca_pk_recv = ca_pk) then
+    {44}if (verify(cert_1,(server_name,srv_pk),ca_pk) = true) then
+    {45}if (verify(cfg_sig_1,cfg_1,srv_pk) = true) then
+    {46}if (verify(cv_sig_1,(context,reg_user_1,sid_reg_1),srv_pk) = true) then
+    {49}event RegistrationComplete(sid_reg_1,server_name,sid_reg_1);
+    {37}let auth_secret_1: bitstring = auth_secret_global in
+    {36}let password: bitstring = password_secret in
+    {47}let rw: bitstring = ksf(oprf_eval(auth_secret_1,password),H((reg_user_1,context))) in
+    {48}let record: bitstring = env_seal(rw,client_static_secret,srv_pk) in
+    {50}out(c, record);
+    {51}new sid_c: bitstring;
+    {52}new ke1_1: bitstring;
+    {54}event ClientStarted(sid_c,server_name,server_name);
+    {53}let cred_id_1: bitstring = credential_id(reg_user_1,context) in
+    {55}out(c, (reg_user_1,sid_c,cred_id_1,ke1_1));
+    {56}in(c, (sid2: bitstring,z_1: bitstring,record2: bitstring,nonce_s_1: bitstring,smac_1: bitstring,cert2: bitstring,cfg2: bitstring,cfg_sig2: bitstring));
+    {57}if (sid2 = sid_c) then
+    {58}let transcript_ke2_1: bitstring = (sid_c,cred_id_1,ke1_1,z_1,record2,nonce_s_1) in
+    {59}let opaque_sk_1: bitstring = opaque_secret(auth_secret_1,ke1_1,z_1,transcript_ke2_1) in
+    {60}let mac_key_1: bitstring = kdf(opaque_sk_1,(context,mac_label)) in
+    {61}if (smac_1 = server_mac(mac_key_1,transcript_ke2_1)) then
+    {62}let cmac_1: bitstring = client_mac(mac_key_1,transcript_ke2_1,smac_1) in
+    {63}let session_key_1: bitstring = kdf(opaque_sk_1,(transcript_ke2_1,cmac_1)) in
+    {64}event ClientFinished(transcript_ke2_1,server_name,server_name,session_key_1);
+    {65}out(c, cmac_1)
+)
+
+-- Query inj-event(ServerFinished(sk,server_name[],server_name[],sk)) ==> inj-event(ClientFinished(sk,server_name[],server_name[],sk)) in process 1.
+Translating the process into Horn clauses...
+Completing...
+Starting query inj-event(ServerFinished(sk,server_name[],server_name[],sk)) ==> inj-event(ClientFinished(sk,server_name[],server_name[],sk))
+RESULT inj-event(ServerFinished(sk,server_name[],server_name[],sk)) ==> inj-event(ClientFinished(sk,server_name[],server_name[],sk)) is true.
+-- Query inj-event(ClientFinished(th,server_name[],server_name[],sk)) ==> inj-event(ServerResponded(th,server_name[],server_name[])) in process 1.
+Translating the process into Horn clauses...
+Completing...
+Starting query inj-event(ClientFinished(th,server_name[],server_name[],sk)) ==> inj-event(ServerResponded(th,server_name[],server_name[]))
+goal reachable: b-inj-event(ServerResponded((sid_c_1,credential_id(alice[],context[]),ke1_2,oprf_eval(oprf_key[],ke1_2),record2_1,nonce_s_2),server_name[],server_name[]),@occ30_1) && attacker(user_1) && attacker(record2_1) && attacker(reg_user_2) && attacker(reg_blind_1) && attacker(sid_reg_2) && attacker(cert2_1) && attacker(cfg2_1) && attacker(cfg_sig2_1) && attacker(reg_eval_2) -> inj-event(ClientFinished((sid_c_1,credential_id(alice[],context[]),ke1_2,oprf_eval(oprf_key[],ke1_2),record2_1,nonce_s_2),server_name[],server_name[],kdf(opaque_secret(auth_secret_global[],ke1_2,oprf_eval(oprf_key[],ke1_2),(sid_c_1,credential_id(alice[],context[]),ke1_2,oprf_eval(oprf_key[],ke1_2),record2_1,nonce_s_2)),((sid_c_1,credential_id(alice[],context[]),ke1_2,oprf_eval(oprf_key[],ke1_2),record2_1,nonce_s_2),client_mac(kdf(opaque_secret(auth_secret_global[],ke1_2,oprf_eval(oprf_key[],ke1_2),(sid_c_1,credential_id(alice[],context[]),ke1_2,oprf_eval(oprf_key[],ke1_2),record2_1,nonce_s_2)),(context[],mac_label[])),(sid_c_1,credential_id(alice[],context[]),ke1_2,oprf_eval(oprf_key[],ke1_2),record2_1,nonce_s_2),server_mac(kdf(opaque_secret(auth_secret_global[],ke1_2,oprf_eval(oprf_key[],ke1_2),(sid_c_1,credential_id(alice[],context[]),ke1_2,oprf_eval(oprf_key[],ke1_2),record2_1,nonce_s_2)),(context[],mac_label[])),(sid_c_1,credential_id(alice[],context[]),ke1_2,oprf_eval(oprf_key[],ke1_2),record2_1,nonce_s_2)))))),@occ64_2)
+The 1st hypothesis occurs strictly before the conclusion.
+The 2nd, 3rd, 4th, 5th, 6th, 7th, 8th, 9th, 10th hypotheses occur before the conclusion.
+Abbreviations:
+sid_c_1 = sid_c[cv_sig_1 = sign((context[],alice[],sid_reg_1[]),srv_sk[]),cfg_sig_1 = sign((server_name[],context[]),srv_sk[]),cfg_1 = (server_name[],context[]),ca_pk_recv = pk(ca_sk[]),cert_1 = sign((server_name[],pk(srv_sk[])),ca_sk[]),reg_eval_1 = reg_eval_2]
+ke1_2 = ke1_1[cv_sig_1 = sign((context[],alice[],sid_reg_1[]),srv_sk[]),cfg_sig_1 = sign((server_name[],context[]),srv_sk[]),cfg_1 = (server_name[],context[]),ca_pk_recv = pk(ca_sk[]),cert_1 = sign((server_name[],pk(srv_sk[])),ca_sk[]),reg_eval_1 = reg_eval_2]
+nonce_s_2 = nonce_s[ke1 = ke1_2,cred_id = credential_id(alice[],context[]),sid_s = sid_c_1,user = user_1,reg_record = record2_1,sid_reg = sid_reg_2,reg_blind = reg_blind_1,reg_user = reg_user_2]
+@occ64_2 = @occ64_1[cfg_sig2 = cfg_sig2_1,cfg2 = cfg2_1,cert2 = cert2_1,smac_1 = server_mac(kdf(opaque_secret(auth_secret_global[],ke1_2,oprf_eval(oprf_key[],ke1_2),(sid_c_1,credential_id(alice[],context[]),ke1_2,oprf_eval(oprf_key[],ke1_2),record2_1,nonce_s_2)),(context[],mac_label[])),(sid_c_1,credential_id(alice[],context[]),ke1_2,oprf_eval(oprf_key[],ke1_2),record2_1,nonce_s_2)),nonce_s_1 = nonce_s_2,record2 = record2_1,z_1 = oprf_eval(oprf_key[],ke1_2),sid2 = sid_c_1,cv_sig_1 = sign((context[],alice[],sid_reg_1[]),srv_sk[]),cfg_sig_1 = sign((server_name[],context[]),srv_sk[]),cfg_1 = (server_name[],context[]),ca_pk_recv = pk(ca_sk[]),cert_1 = sign((server_name[],pk(srv_sk[])),ca_sk[]),reg_eval_1 = reg_eval_2]
+@occ30_1 = @occ30[ke1 = ke1_2,cred_id = credential_id(alice[],context[]),sid_s = sid_c_1,user = user_1,reg_record = record2_1,sid_reg = sid_reg_2,reg_blind = reg_blind_1,reg_user = reg_user_2]
+goal reachable: b-inj-event(ServerResponded((sid_c_1,credential_id(alice[],context[]),ke1_2,oprf_eval(oprf_key[],ke1_2),record2_1,nonce_s_2),server_name[],server_name[]),@occ30_1) && attacker(user_1) && attacker(record2_1) && attacker(reg_user_2) && attacker(reg_blind_1) && attacker(sid_reg_2) && attacker(cert2_1) && attacker(cfg2_1) && attacker(cfg_sig2_1) && attacker(reg_eval_2) && attacker(reg_user_3) && attacker(sid_reg_3) -> inj-event(ClientFinished((sid_c_1,credential_id(alice[],context[]),ke1_2,oprf_eval(oprf_key[],ke1_2),record2_1,nonce_s_2),server_name[],server_name[],kdf(opaque_secret(auth_secret_global[],ke1_2,oprf_eval(oprf_key[],ke1_2),(sid_c_1,credential_id(alice[],context[]),ke1_2,oprf_eval(oprf_key[],ke1_2),record2_1,nonce_s_2)),((sid_c_1,credential_id(alice[],context[]),ke1_2,oprf_eval(oprf_key[],ke1_2),record2_1,nonce_s_2),client_mac(kdf(opaque_secret(auth_secret_global[],ke1_2,oprf_eval(oprf_key[],ke1_2),(sid_c_1,credential_id(alice[],context[]),ke1_2,oprf_eval(oprf_key[],ke1_2),record2_1,nonce_s_2)),(context[],mac_label[])),(sid_c_1,credential_id(alice[],context[]),ke1_2,oprf_eval(oprf_key[],ke1_2),record2_1,nonce_s_2),server_mac(kdf(opaque_secret(auth_secret_global[],ke1_2,oprf_eval(oprf_key[],ke1_2),(sid_c_1,credential_id(alice[],context[]),ke1_2,oprf_eval(oprf_key[],ke1_2),record2_1,nonce_s_2)),(context[],mac_label[])),(sid_c_1,credential_id(alice[],context[]),ke1_2,oprf_eval(oprf_key[],ke1_2),record2_1,nonce_s_2)))))),@occ64_2)
+The 1st hypothesis occurs strictly before the conclusion.
+The 2nd, 3rd, 4th, 5th, 6th, 7th, 8th, 9th, 10th, 11th, 12th hypotheses occur before the conclusion.
+Abbreviations:
+sid_c_1 = sid_c[cv_sig_1 = sign((context[],alice[],sid_reg_1[]),srv_sk[]),cfg_sig_1 = sign((context[],reg_user_3,sid_reg_3),srv_sk[]),cfg_1 = (context[],reg_user_3,sid_reg_3),ca_pk_recv = pk(ca_sk[]),cert_1 = sign((server_name[],pk(srv_sk[])),ca_sk[]),reg_eval_1 = reg_eval_2]
+ke1_2 = ke1_1[cv_sig_1 = sign((context[],alice[],sid_reg_1[]),srv_sk[]),cfg_sig_1 = sign((context[],reg_user_3,sid_reg_3),srv_sk[]),cfg_1 = (context[],reg_user_3,sid_reg_3),ca_pk_recv = pk(ca_sk[]),cert_1 = sign((server_name[],pk(srv_sk[])),ca_sk[]),reg_eval_1 = reg_eval_2]
+nonce_s_2 = nonce_s[ke1 = ke1_2,cred_id = credential_id(alice[],context[]),sid_s = sid_c_1,user = user_1,reg_record = record2_1,sid_reg = sid_reg_2,reg_blind = reg_blind_1,reg_user = reg_user_2]
+@occ64_2 = @occ64_1[cfg_sig2 = cfg_sig2_1,cfg2 = cfg2_1,cert2 = cert2_1,smac_1 = server_mac(kdf(opaque_secret(auth_secret_global[],ke1_2,oprf_eval(oprf_key[],ke1_2),(sid_c_1,credential_id(alice[],context[]),ke1_2,oprf_eval(oprf_key[],ke1_2),record2_1,nonce_s_2)),(context[],mac_label[])),(sid_c_1,credential_id(alice[],context[]),ke1_2,oprf_eval(oprf_key[],ke1_2),record2_1,nonce_s_2)),nonce_s_1 = nonce_s_2,record2 = record2_1,z_1 = oprf_eval(oprf_key[],ke1_2),sid2 = sid_c_1,cv_sig_1 = sign((context[],alice[],sid_reg_1[]),srv_sk[]),cfg_sig_1 = sign((context[],reg_user_3,sid_reg_3),srv_sk[]),cfg_1 = (context[],reg_user_3,sid_reg_3),ca_pk_recv = pk(ca_sk[]),cert_1 = sign((server_name[],pk(srv_sk[])),ca_sk[]),reg_eval_1 = reg_eval_2]
+@occ30_1 = @occ30[ke1 = ke1_2,cred_id = credential_id(alice[],context[]),sid_s = sid_c_1,user = user_1,reg_record = record2_1,sid_reg = sid_reg_2,reg_blind = reg_blind_1,reg_user = reg_user_2]
+RESULT inj-event(ClientFinished(th,server_name[],server_name[],sk)) ==> inj-event(ServerResponded(th,server_name[],server_name[])) is true.
+-- Query inj-event(RegistrationComplete(sidq,server_name[],sidq)) ==> inj-event(RegistrationServerSigned(server_name[],sidq)) in process 1.
+Translating the process into Horn clauses...
+Completing...
+Starting query inj-event(RegistrationComplete(sidq,server_name[],sidq)) ==> inj-event(RegistrationServerSigned(server_name[],sidq))
+goal reachable: attacker(reg_eval_2) && b-inj-event(RegistrationServerSigned(server_name[],sid_reg_2),@occ20_1) && attacker(reg_user_2) && attacker(reg_blind_1) && attacker(sid_reg_2) && b-inj-event(RegistrationServerSigned(server_name[],sid_reg_1[]),@occ20_2) && attacker(reg_blind_2) -> inj-event(RegistrationComplete(sid_reg_1[],server_name[],sid_reg_1[]),@occ49_1)
+The 1st, 3rd, 4th, 5th, 7th hypotheses occur before the conclusion.
+The 2nd, 6th hypotheses occur strictly before the conclusion.
+Abbreviations:
+@occ49_1 = @occ49[cv_sig_1 = sign((context[],alice[],sid_reg_1[]),srv_sk[]),cfg_sig_1 = sign((server_name[],context[]),srv_sk[]),cfg_1 = (server_name[],context[]),ca_pk_recv = pk(ca_sk[]),cert_1 = sign((server_name[],pk(srv_sk[])),ca_sk[]),reg_eval_1 = reg_eval_2]
+@occ20_1 = @occ20[sid_reg = sid_reg_2,reg_blind = reg_blind_1,reg_user = reg_user_2]
+@occ20_2 = @occ20[sid_reg = sid_reg_1[],reg_blind = reg_blind_2,reg_user = alice[]]
+goal reachable: attacker(reg_eval_2) && b-inj-event(RegistrationServerSigned(server_name[],sid_reg_2),@occ20_1) && attacker(reg_user_2) && attacker(reg_blind_1) && attacker(sid_reg_2) && b-inj-event(RegistrationServerSigned(server_name[],sid_reg_1[]),@occ20_2) && attacker(reg_blind_2) -> inj-event(RegistrationComplete(sid_reg_1[],server_name[],sid_reg_1[]),@occ49_1)
+The 1st, 3rd, 4th, 5th, 7th hypotheses occur before the conclusion.
+The 2nd, 6th hypotheses occur strictly before the conclusion.
+Abbreviations:
+@occ49_1 = @occ49[cv_sig_1 = sign((context[],alice[],sid_reg_1[]),srv_sk[]),cfg_sig_1 = sign((context[],reg_user_2,sid_reg_2),srv_sk[]),cfg_1 = (context[],reg_user_2,sid_reg_2),ca_pk_recv = pk(ca_sk[]),cert_1 = sign((server_name[],pk(srv_sk[])),ca_sk[]),reg_eval_1 = reg_eval_2]
+@occ20_1 = @occ20[sid_reg = sid_reg_2,reg_blind = reg_blind_1,reg_user = reg_user_2]
+@occ20_2 = @occ20[sid_reg = sid_reg_1[],reg_blind = reg_blind_2,reg_user = alice[]]
+RESULT inj-event(RegistrationComplete(sidq,server_name[],sidq)) ==> inj-event(RegistrationServerSigned(server_name[],sidq)) is true.
+-- Query not attacker(password_secret[]) in process 1.
+Translating the process into Horn clauses...
+Completing...
+Starting query not attacker(password_secret[])
+RESULT not attacker(password_secret[]) is true.
+-- Query not attacker(auth_secret_global[]) in process 1.
+Translating the process into Horn clauses...
+Completing...
+Starting query not attacker(auth_secret_global[])
+RESULT not attacker(auth_secret_global[]) is true.
+
+--------------------------------------------------------------
+Verification summary:
+
+Query inj-event(ServerFinished(sk,server_name[],server_name[],sk)) ==> inj-event(ClientFinished(sk,server_name[],server_name[],sk)) is true.
+
+Query inj-event(ClientFinished(th,server_name[],server_name[],sk)) ==> inj-event(ServerResponded(th,server_name[],server_name[])) is true.
+
+Query inj-event(RegistrationComplete(sidq,server_name[],sidq)) ==> inj-event(RegistrationServerSigned(server_name[],sidq)) is true.
+
+Query not attacker(password_secret[]) is true.
+
+Query not attacker(auth_secret_global[]) is true.
+
+--------------------------------------------------------------
+
