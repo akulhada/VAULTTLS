@@ -204,7 +204,7 @@ python tools/compare_baselines.py \
 The saved baseline comparison reports:
 - password-over-TLS mean: 234.12 ms
 - certificate-only mutual-auth mean: 0.74 ms
-- VAULTTLS-R mean: 350.15 ms
+- VAULTTLS mean: 350.15 ms
 - overhead vs password-over-TLS: 116.03 ms (49.6%)
 
 Creates:
